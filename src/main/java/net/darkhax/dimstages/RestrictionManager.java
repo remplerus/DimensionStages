@@ -4,17 +4,20 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
 import net.darkhax.dimstages.restriction.IDimensionRestriction;
-import net.minecraft.client.resources.ReloadListener;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.profiler.IProfiler;
-import net.minecraft.resources.IResourceManager;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.packs.resources.PreparableReloadListener;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
 
-public class RestrictionManager extends ReloadListener<Void> {
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+
+public class RestrictionManager implements PreparableReloadListener {
     
     private final Multimap<ResourceLocation, IDimensionRestriction> restrictions = ArrayListMultimap.create();
     
@@ -32,9 +35,8 @@ public class RestrictionManager extends ReloadListener<Void> {
     
     private void onEntityTravelToDimension (EntityTravelToDimensionEvent event) {
         
-        if (event.getEntity() instanceof ServerPlayerEntity) {
-            
-            final ServerPlayerEntity player = (ServerPlayerEntity) event.getEntity();
+        if (event.getEntity() instanceof final ServerPlayer player) {
+
             final ResourceLocation dimensionId = event.getDimension().location();
             
             for (final IDimensionRestriction restriction : this.restrictions.get(dimensionId)) {
@@ -44,7 +46,7 @@ public class RestrictionManager extends ReloadListener<Void> {
                     event.setCanceled(true);
                     DimensionStages.LOG.debug("Restricted {} from accessing dimension {}. Restriction={}", player.getDisplayName().getString(), dimensionId, restriction);
                     
-                    final ITextComponent message = restriction.getRestrictedMessage(player, dimensionId);
+                    final TextComponent message = restriction.getRestrictedMessage(player, dimensionId);
                     
                     if (message != null) {
                         
@@ -61,16 +63,11 @@ public class RestrictionManager extends ReloadListener<Void> {
         
         event.addListener(this);
     }
-    
+
     @Override
-    protected Void prepare (IResourceManager manager, IProfiler profiler) {
-        
-        return null;
-    }
-    
-    @Override
-    protected void apply (Void data, IResourceManager manager, IProfiler profiler) {
-        
+    public CompletableFuture<Void> reload(PreparationBarrier p_10638_, ResourceManager p_10639_, ProfilerFiller p_10640_, ProfilerFiller p_10641_, Executor p_10642_, Executor p_10643_) {
+
         this.restrictions.clear();
+        return null;
     }
 }
