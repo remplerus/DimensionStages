@@ -3,6 +3,9 @@
 bin/
 build/
 
+#IDE
+.idea/
+
 #Eclipse
 *.classpath
 *.project
